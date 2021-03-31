@@ -1,11 +1,13 @@
 package sample;
 
-
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 
-public class AStar{
+public class AStar implements ActionListener {
     Frame frame;
     Node[][] board;
     Node start;
@@ -17,20 +19,9 @@ public class AStar{
 
     List<Node> path = new ArrayList<>();
     Boolean running, pathExists = false;
+    //Timer timer = new Timer(200, this);
 
 
-    public AStar(){
-        frame = new Frame();
-        height = 10;
-        width = 10;
-        board = new Node[height][width];
-        start = new Node(0,0, 0, 0, 0);
-        end = new Node(height - 1,width - 1);
-        openSet = new MinHeap(height * width);
-        closeSet = new HashSet<>(height * width);
-        openSet.insert(start);
-
-    }
 
     public AStar(Node[][] grid, Frame frame, int startX, int startY, int endX, int endY, int width, int height) {
         this.frame = frame;
@@ -42,30 +33,38 @@ public class AStar{
         openSet = new MinHeap(height * width);
         closeSet = new HashSet<>(height * width);
         openSet.insert(start);
+    }
+
+
+    public void actionPerformed(ActionEvent e) {
 
     }
 
     public void findPath(){
         running = true;
 
-        while (openSet.numItems > 0) {
+        if (openSet.numItems > 0) {
 
+            // move lowest node to closed set to explore
             Node currentNode = openSet.remove();
             closeSet.add(currentNode);
-            frame.repaint();
 
             if (currentNode.x == end.x && currentNode.y == end.y){
+                System.out.println("Path found!");
                 path = retracePath(currentNode);
                 pathExists = true;
                 running = false;
                 return;
             }
+
+            // explore neighbors of current node
             List<Node> currNeighbors = findNeighbors(currentNode);
             for (Node n : currNeighbors) {
                 if (closeSet.contains(n)) {
                     continue;
                 }
 
+                // (re)calculate costs of each neighbor in case of we find lower cost (shorter path)
                 double newNeighborCost = currentNode.g + getDist(currentNode, n);
                 if (newNeighborCost < n.g || !openSet.contains(n)) {
                     n.g = newNeighborCost;
@@ -79,24 +78,28 @@ public class AStar{
                         openSet.updateNode(n);
                     }
                 }
-                //frame.repaint();
+                // frame.repaint();
             }
         }
         running = false;
+
     }
 
+    // calculate each of the neighbors, exclude the node itself and invalid nodes
     public List<Node> findNeighbors(Node node) {
         List<Node> neighbors = new ArrayList<>();
+
         for (int x = -1; x <= 1; x++){
             for (int y = -1; y <= 1; y++){
                 if (x == 0 && y == 0){
                     continue;
                 }
+
                 int xcoord = node.x + x;
                 int ycoord = node.y + y;
+
                 if (isValid(xcoord, ycoord) && !board[xcoord][ycoord].isObstacle) {
                     if ((x != 0 && y != 0) && isDiagonalCutOff(node, board[xcoord][ycoord]))  {
-                        System.out.println("diagonal block: " + xcoord + ", " + ycoord);
                         continue;
                     }
                     neighbors.add(board[xcoord][ycoord]);
@@ -106,6 +109,7 @@ public class AStar{
         return neighbors;
     }
 
+    // retrace each nodes parent to find path from endpoint
     public List<Node> retracePath(Node node){
         List<Node> nodePath = new ArrayList<>();
         Node curr = node;
@@ -116,10 +120,12 @@ public class AStar{
         return nodePath;
     }
 
+    // calculate euclidean distance for cost functions
     public double getDist(Node prev, Node curr) {
         return Math.sqrt(Math.pow(curr.x - prev.x,2) + Math.pow(curr.y - prev.y,2));
     }
 
+    // check nodes are within bounds
     public boolean isValid(int x, int y) {
         return (x >= 0 && x < width && y >= 0 && y < height);
     }
