@@ -15,7 +15,8 @@ public class AStar {
     HashSet<Node> closeSet;
 
     List<Node> path = new ArrayList<>();
-    Boolean running, pathExists = false;
+    Boolean pathExists = false;
+    Boolean isFinished = false;
 
 
     public AStar(Node[][] grid, Frame frame, int startX, int startY, int endX, int endY, int width, int height) {
@@ -35,7 +36,6 @@ public class AStar {
     // the Timer will loop it through to completion when the start button is clicked
 
     public void findPath(){
-        running = true;
 
         if (openSet.numItems > 0) {
 
@@ -44,10 +44,9 @@ public class AStar {
             closeSet.add(currentNode);
 
             if (currentNode.x == end.x && currentNode.y == end.y){
-                System.out.println("Path found!");
                 path = retracePath(currentNode);
                 pathExists = true;
-                running = false;
+                isFinished = true;
                 return;
             }
 
