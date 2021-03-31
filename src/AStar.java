@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class AStar {
-    Frame frame;
     Node[][] board;
     Node start;
     Node end;
@@ -19,8 +18,7 @@ public class AStar {
     Boolean isFinished = false;
 
 
-    public AStar(Node[][] grid, Frame frame, int startX, int startY, int endX, int endY, int width, int height) {
-        this.frame = frame;
+    public AStar(Node[][] grid, int startX, int startY, int endX, int endY, int width, int height) {
         this.width = width;
         this.height = height;
         board = grid;
@@ -30,7 +28,6 @@ public class AStar {
         closeSet = new HashSet<>(height * width);
         openSet.insert(start);
     }
-
 
     // findPath executes one iteration at a time
     // the Timer will loop it through to completion when the start button is clicked
@@ -60,23 +57,15 @@ public class AStar {
                 // (re)calculate costs of each neighbor in case of we find lower cost (shorter path)
                 double newNeighborCost = currentNode.g + getDist(currentNode, n);
                 if (newNeighborCost < n.g || !openSet.contains(n)) {
-                    n.g = newNeighborCost;
-                    n.h = getDist(n, end);
-                    n.f = n.g + n.h;
-                    n.parent = currentNode;
-
-                    if(!openSet.contains(n)){
-                        openSet.insert(n);
-                    } else {
-                        openSet.updateNode(n);
-                    }
+                    updateNode(n, currentNode, newNeighborCost);
                 }
-                // frame.repaint();
             }
         }
-        running = false;
-
+        else {
+            isFinished = true;
+        }
     }
+
 
     // calculate each of the neighbors, exclude the node itself and invalid nodes
     public List<Node> findNeighbors(Node node) {
@@ -100,6 +89,19 @@ public class AStar {
             }
         }
         return neighbors;
+    }
+
+    public void updateNode(Node node, Node curr, double newCost) {
+        node.g = newCost;
+        node.h = getDist(node, end);
+        node.f = node.g + node.h;
+        node.parent = curr;
+
+        if(!openSet.contains(node)){
+            openSet.insert(node);
+        } else {
+            openSet.updateNode(node);
+        }
     }
 
     // retrace each nodes parent to find path from endpoint
