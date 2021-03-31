@@ -38,10 +38,6 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
     Timer timer;
 
-    public static void main(String[] args){
-        new Frame();
-    }
-
     public Frame() {
 
         numTilesX = (int) dimX.getNumber();
@@ -103,6 +99,11 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
         revalidate();
 
+    }
+    
+    
+    public static void main(String[] args){
+        new Frame();
     }
 
     public void calculateBoard(int numX, int numY) {
@@ -211,10 +212,6 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         }
 
     }
-    // mouse event for a play button and stop
-    // mouse event for start stop
-    // mouse motion event to draw obstacles
-
 
     public boolean isValid(int x, int y) {
 
@@ -273,10 +270,8 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
     }
 
     public void mouseMoved (MouseEvent e) { }
-
     public void mouseEntered(MouseEvent e) {}
     public void mouseExited(MouseEvent e) {}
     public void mousePressed(MouseEvent e) {}
     public void mouseReleased(MouseEvent e) {}
-    // ******* method to start pathfinder
 }
