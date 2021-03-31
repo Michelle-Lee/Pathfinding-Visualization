@@ -1,13 +1,10 @@
 package sample;
 
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 
-public class AStar implements ActionListener {
+public class AStar {
     Frame frame;
     Node[][] board;
     Node start;
@@ -19,8 +16,6 @@ public class AStar implements ActionListener {
 
     List<Node> path = new ArrayList<>();
     Boolean running, pathExists = false;
-    //Timer timer = new Timer(200, this);
-
 
 
     public AStar(Node[][] grid, Frame frame, int startX, int startY, int endX, int endY, int width, int height) {
@@ -36,9 +31,8 @@ public class AStar implements ActionListener {
     }
 
 
-    public void actionPerformed(ActionEvent e) {
-
-    }
+    // findPath executes one iteration at a time
+    // the Timer will loop it through to completion when the start button is clicked
 
     public void findPath(){
         running = true;
