@@ -81,19 +81,21 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         grid.add(spinnerX);
         grid.add(spinnerY);
 
-        timer = new Timer(1000, this); //new ActionListener()
-/*        {
-            @Override
+        timer = new Timer(15, new ActionListener()
+        {
             public void actionPerformed(ActionEvent e) {
-                if(astar.pathExists) {
-                    ((Timer)e.getSource()).stop();
-                    startButton.setEnabled(false);
-                }
-                else if (!astar.pathExists && astar.running){
-
+                if (astar != null) {
+                    if(astar.pathExists) {
+                        ((Timer)e.getSource()).stop();
+                        startButton.setEnabled(false);
+                    }
+                    else {
+                        astar.findPath();
+                    }
+                    repaint();
                 }
             }
-        }*/
+        });
         timer.setInitialDelay(1);
         timer.start();
 
@@ -129,14 +131,8 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
     public void actionPerformed(ActionEvent e) {
         if(e.getActionCommand() == "StartButton" && startX != -1 && startY != -1 && endX != -1 && endY != -1){
-
-            //timer.start();
             astar = new AStar(board, this, startX, startY, endX, endY, numTilesX, numTilesY);
-
-            astar.findPath();
-            //timer.stop();
-
-            //repaint();
+            timer.start();
         }
     }
 
