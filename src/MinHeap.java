@@ -1,6 +1,5 @@
 package sample;
 
-import java.util.PriorityQueue;
 
 public class MinHeap<T extends Node> {
     Node[] items;
@@ -11,12 +10,7 @@ public class MinHeap<T extends Node> {
         numItems = 0;
     }
 
-    public MinHeap(int heapCapacity, Node node) {
-        items = new Node[heapCapacity];
-        items[0] = node;
-        numItems = 0;
-
-    }
+    // insert from the bottom, bubble up to correct position
     public void insert(Node newNode){
         newNode.index = numItems;
         items[numItems] = newNode;
@@ -24,6 +18,7 @@ public class MinHeap<T extends Node> {
         numItems++;
     }
 
+    // remove from the top, replace with last element, bubble down
     public Node remove() {
         Node root = items[0];
         numItems--;
@@ -33,6 +28,7 @@ public class MinHeap<T extends Node> {
         return root;
     }
 
+    // swap up until node is in correct position
     public void sortUp(Node node){
         int parentIndex = (node.index - 1) / 2;
         while(node.compareTo(items[parentIndex]) > 0) {
@@ -43,8 +39,8 @@ public class MinHeap<T extends Node> {
             parentIndex = (node.index - 1) / 2;
         }
     }
-
-
+    
+    // swap down until node in correct position
     public void sortDown(Node node){
         int leftIndex = node.index * 2 + 1;
         int rightIndex = node.index * 2 + 2;
@@ -70,14 +66,17 @@ public class MinHeap<T extends Node> {
         return;
     }
 
-    public void updateNode(Node node) {
+    // if node has new cost values, update
+    public void updateNode(Node node) { 
         sortUp(node);
     }
 
+    // contains
     public boolean contains(Node node){
         return items[node.index].equals(node);
     }
 
+    // swap two nodes and their respective indices
     public void swap(Node node1, Node node2) {
         items[node1.index] = node2;
         items[node2.index] = node1;
@@ -85,28 +84,5 @@ public class MinHeap<T extends Node> {
         int tempIndex = node1.index;
         node1.index = node2.index;
         node2.index = tempIndex;
-    }
-
-    public void heapToString(){
-        for(int i=0;i<numItems;i++){
-            for(int j=0;j<Math.pow(2,i)&&j+Math.pow(2,i)<=numItems;j++){
-                System.out.print(items[j+(int)Math.pow(2,i)-1].f+" ");
-
-            }
-            System.out.println();
-        }
-    }
-    public void printHeap(){
-        System.out.println("numitems: " + numItems);
-        for (int i = 0; i<numItems; i++){
-            System.out.println("heap array: "+items[i].f);
-        }
-    }
-
-    public void printHeapCoord(){
-        System.out.println("numItems: " + numItems);
-        for (int i = 0; i<numItems; i++){
-            System.out.println("heap (x, y): "+items[i].x+", "+items[i].y);
-        }
     }
 }
