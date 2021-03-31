@@ -1,9 +1,5 @@
 package sample;
 
-import javafx.scene.shape.Rectangle;
-import javafx.scene.shape.Shape;
-import javafx.scene.paint.Color;
-import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 
 
@@ -43,7 +39,6 @@ public class Node extends StackPane implements Comparable<Node> {
         this.isObstacle = false;
 
     }
-    // LIGHTCORAL, LIGHTSALMON, DARKSALMON,
 
     @Override
     public int compareTo(Node other) {
