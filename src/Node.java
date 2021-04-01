@@ -10,8 +10,9 @@ public class Node extends StackPane implements Comparable<Node> {
     double h;
     double f;
     int index;
-    Boolean isObstacle;
-    Node parent;
+    Boolean isObstacle = false;
+    String color = "";
+    Node parent = null;
 
 
     public Node(int x, int y){
@@ -21,9 +22,6 @@ public class Node extends StackPane implements Comparable<Node> {
         this.g = Integer.MAX_VALUE;
         this.h = Integer.MAX_VALUE;
         this.f = Integer.MAX_VALUE;
-        this.index = 0;
-        this.parent = null;
-        this.isObstacle = false;
 
     }
 
@@ -34,9 +32,6 @@ public class Node extends StackPane implements Comparable<Node> {
         this.g = g;
         this.h = h;
         this.f = f;
-        this.index = 0;
-        this.parent = null;
-        this.isObstacle = false;
 
     }
 
