@@ -16,6 +16,7 @@ public class AStar {
     List<Node> path = new ArrayList<>();
     Boolean pathExists = false;
     Boolean isFinished = false;
+    ArrayList<Node> currNeighbors = new ArrayList<>();
 
 
     public AStar(Node[][] grid, int startX, int startY, int endX, int endY, int width, int height) {
@@ -48,7 +49,8 @@ public class AStar {
             }
 
             // explore neighbors of current node
-            List<Node> currNeighbors = findNeighbors(currentNode);
+            currNeighbors.clear();
+            findNeighbors(currentNode);
             for (Node n : currNeighbors) {
                 if (closeSet.contains(n)) {
                     continue;
@@ -68,8 +70,7 @@ public class AStar {
 
 
     // calculate each of the neighbors, exclude the node itself and invalid nodes
-    public List<Node> findNeighbors(Node node) {
-        List<Node> neighbors = new ArrayList<>();
+    public void findNeighbors(Node node) {
 
         for (int x = -1; x <= 1; x++){
             for (int y = -1; y <= 1; y++){
@@ -84,13 +85,13 @@ public class AStar {
                     if ((x != 0 && y != 0) && isDiagonalCutOff(node, board[xcoord][ycoord]))  {
                         continue;
                     }
-                    neighbors.add(board[xcoord][ycoord]);
+                    currNeighbors.add(board[xcoord][ycoord]);
                 }
             }
         }
-        return neighbors;
     }
 
+    // updates node if a better path to that node is found
     public void updateNode(Node node, Node curr, double newCost) {
         node.g = newCost;
         node.h = getDist(node, end);
