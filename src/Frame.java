@@ -47,13 +47,14 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
     public Frame() {
 
+        // DIMENSIONS
         numTilesX = (int) dimX.getNumber();
         numTilesY = (int) dimY.getNumber();
         gridWidth = 910;
         gridHeight = 610;
-        calculateBoard(numTilesX, numTilesY);
+        calculateBoard();
 
-        // initialize JFrame
+        // INITIALIZE JFRAME
         grid = new JFrame();
         grid.revalidate();
         grid.setContentPane(this);
@@ -68,7 +69,7 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         grid.addMouseMotionListener(this);
         grid.getContentPane().validate();
 
-        // controls
+        // CONTROLS
         startButton.addActionListener(this);
         startButton.setActionCommand("StartButton");
 
@@ -81,9 +82,10 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         grid.add(heightLabel);
         grid.add(spinnerY);
 
+        // ANIMATION & COLORS
         hardCodeColors();
 
-
+        // timer for path exploring animation: timer action runs off every 15 ms
         timer = new Timer(15, new ActionListener()
         {
             public void actionPerformed(ActionEvent e) {
@@ -94,7 +96,7 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
                     }
                     else {
                         myColor = colors.getNext();
-                        astar.findPath();
+                        astar.findPath(); // pathfinder iterates every 15 ms
                     }
                     repaint();
                 }
@@ -104,11 +106,13 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         revalidate();
     }
 
+    // **** MAIN ****
     public static void main(String[] args){
         new Frame();
     }
 
-    public void calculateBoard(int numX, int numY) {
+    // calculate tile size and board dimensions for AStar
+    public void calculateBoard() {
         tileSize = Math.min((gridWidth - 10) / numTilesX, tileSize = (gridHeight - 10 ) / numTilesY);
 
         board = new Node[numTilesX][numTilesY];
@@ -120,14 +124,15 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
         repaint();
     }
-    public void stateChanged(ChangeEvent e) {
 
+    // listener for spinner changes (dimensions)
+    public void stateChanged(ChangeEvent e) {
         numTilesX = (int) dimX.getNumber();
         numTilesY = (int) dimY.getNumber();
-        calculateBoard(numTilesX, numTilesY);
-
+        calculateBoard();
     }
 
+    // start button action listener
     public void actionPerformed(ActionEvent e) {
         if(e.getActionCommand() == "StartButton" && startX != -1 && startY != -1 && endX != -1 && endY != -1){
 
@@ -136,85 +141,31 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         }
     }
 
-
+    // paint attributes for the grid
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // draw grid
-        g.setColor(Color.lightGray);
-        for (int i = 0; i < numTilesX; i++) {
-            for (int j = 0; j < numTilesY; j++) {
-                g.drawRect(i * tileSize, j * tileSize, tileSize, tileSize);
+        drawGrid(g);
 
-            }
-        }
-
-        // draw obstacles
         g.setColor(Color.black);
-        for (int i = 0; i < obstacleCount; i++){
-            g.fillRect(obstacles.get(i).x * tileSize, obstacles.get(i).y * tileSize, tileSize, tileSize);
-        }
+        paintObstacles(g);
 
-
-        // paint start
-        if (startX != -1 && startY != -1) {
-            g.setColor(Color.decode("#355C7D"));
-        } else {
-            g.setColor(Color.white);
-        }
-        g.fillRect(getCoord(startX), getCoord(startY), tileSize, tileSize);
-
-        // paint end
-        if (endX != -1 && endY != -1) {
-            g.setColor(Color.decode("#6C5B7B"));
-        } else {
-            g.setColor(Color.white);
-        }
-        g.fillRect(getCoord(endX), getCoord(endY), tileSize, tileSize);
-
+        paintStart(g);
+        paintEnd(g);
 
         if (astar != null) {
 
-            // paint openSet
             g.setColor(Color.decode(myColor));
-            for (int i = 0; i < astar.openSet.numItems; i++){
-                Node openNode = astar.openSet.items[i];
-                if ((openNode == astar.start) || (openNode == astar.end)){
-                    continue;
-                }
-                g.fillRect(openNode.x * tileSize, openNode.y * tileSize, tileSize, tileSize);
-            }
+            paintOpenSet(g);
 
-            // paint closed set
             g.setColor(Color.decode("#F67280"));
-            for (Node c : astar.closeSet){
-                if (c == astar.start || c == astar.end){
-                    continue;
-                }
-                g.fillRect(c.x * tileSize, c.y * tileSize, tileSize, tileSize);
-            }
+            paintCloseSet(g);
 
-            // paint neighbors
             g.setColor(Color.decode("#F8B195"));
-            for (Node n : astar.currNeighbors) {
-                if (n == astar.start || n == astar.end){
-                    continue;
-                }
-                g.fillRect(n.x * tileSize, n.y * tileSize, tileSize, tileSize);
-            }
+            paintNeighbors(g);
 
-            // paint path
-            if (astar.pathExists) {
-                g.setColor(Color.decode("#F0A35E"));
-                for (int i = astar.path.size() - 1; i >= 0; i--) {
-                    int pathX = astar.path.get(i).x;
-                    int pathY = astar.path.get(i).y;
-                    if ((astar.path.get(i) == astar.start) || (astar.path.get(i) == astar.end)){
-                        continue;
-                    }
-                    g.fillRect(pathX * tileSize, pathY * tileSize, tileSize, tileSize);
-                }
-            }
+            g.setColor(Color.decode("#F0A35E"));
+            paintPath(g);
 
         }
 
@@ -284,6 +235,79 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         return coord * tileSize;
     }
 
+    // ************** Paint Component Helper Functions *****************
+    public void drawGrid(Graphics g) {
+        g.setColor(Color.lightGray);
+        for (int i = 0; i < numTilesX; i++) {
+            for (int j = 0; j < numTilesY; j++) {
+                g.drawRect(i * tileSize, j * tileSize, tileSize, tileSize);
+
+            }
+        }
+    }
+    public void paintObstacles(Graphics g) {
+        for (int i = 0; i < obstacleCount; i++){
+            g.fillRect(obstacles.get(i).x * tileSize, obstacles.get(i).y * tileSize, tileSize, tileSize);
+        }
+    }
+    public void paintStart(Graphics g) {
+        if (startX != -1 && startY != -1) {
+            g.setColor(Color.decode("#355C7D"));
+        } else {
+            g.setColor(Color.white);
+        }
+        g.fillRect(getCoord(startX), getCoord(startY), tileSize, tileSize);
+
+    }
+    public void paintEnd(Graphics g) {
+        if (endX != -1 && endY != -1) {
+            g.setColor(Color.decode("#6C5B7B"));
+        } else {
+            g.setColor(Color.white);
+        }
+        g.fillRect(getCoord(endX), getCoord(endY), tileSize, tileSize);
+
+    }
+    public void paintOpenSet(Graphics g) {
+        for (int i = 0; i < astar.openSet.numItems; i++){
+            Node openNode = astar.openSet.items[i];
+            if ((openNode == astar.start) || (openNode == astar.end)){
+                continue;
+            }
+            g.fillRect(openNode.x * tileSize, openNode.y * tileSize, tileSize, tileSize);
+        }
+    }
+    public void paintCloseSet(Graphics g) {
+        for (Node c : astar.closeSet){
+            if (c == astar.start || c == astar.end){
+                continue;
+            }
+            g.fillRect(c.x * tileSize, c.y * tileSize, tileSize, tileSize);
+        }
+    }
+    public void paintNeighbors(Graphics g) {
+        for (Node n : astar.currNeighbors) {
+            if (n == astar.start || n == astar.end){
+                continue;
+            }
+            g.fillRect(n.x * tileSize, n.y * tileSize, tileSize, tileSize);
+        }
+    }
+    public void paintPath(Graphics g) {
+        if (astar.pathExists) {
+            for (int i = astar.path.size() - 1; i >= 0; i--) {
+                int pathX = astar.path.get(i).x;
+                int pathY = astar.path.get(i).y;
+                if ((astar.path.get(i) == astar.start) || (astar.path.get(i) == astar.end)){
+                    continue;
+                }
+                g.fillRect(pathX * tileSize, pathY * tileSize, tileSize, tileSize);
+            }
+        }
+    }
+
+    // ************** Paint Component Helper Functions END *****************
+
     public void hardCodeColors() {
         colors.add("#f3a797");
         colors.add("#e2959b");
@@ -304,6 +328,4 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
     public void mouseExited(MouseEvent e) {}
     public void mousePressed(MouseEvent e) {}
     public void mouseReleased(MouseEvent e) {}
-    // ******* method to start pathfinder
 }
-// add labels to dimensions
