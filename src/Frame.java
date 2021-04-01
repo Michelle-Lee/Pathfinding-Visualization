@@ -7,8 +7,11 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Iterator;
+import java.util.LinkedList;
 
 public class Frame extends JPanel implements MouseInputListener, ActionListener, ChangeListener {
+
     // GRID
     JFrame grid;
     Node[][] board;
@@ -18,24 +21,28 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
     // SETUP
     ArrayList<Node> obstacles = new ArrayList<>();
-    int startX, startY = -1;
-    int endX, endY = -1;
+    int startX = -1;
+    int startY = -1;
+    int endX = -1;
+    int endY = -1;
     int obstacleCount = 0;
 
-    AStar astar;
 
     // CONTROLS
-    int initVal = 50;
+    int initW = 80;
+    int initH = 50;
     int min = 10;
     int max = 100;
     int step = 5;
-    SpinnerNumberModel dimX = new SpinnerNumberModel(initVal, min, max, step);
-    SpinnerNumberModel dimY = new SpinnerNumberModel(initVal, min, max, step);
+    SpinnerNumberModel dimX = new SpinnerNumberModel(initW, min, max, step);
+    SpinnerNumberModel dimY = new SpinnerNumberModel(initH, min, max, step);
     JSpinner spinnerX = new JSpinner(dimX);
     JSpinner spinnerY = new JSpinner(dimY);
-
     JButton startButton = new JButton("Start");
+    JLabel widthLabel = new JLabel("Width");
+    JLabel heightLabel = new JLabel("Height");
 
+    AStar astar;
     Timer timer;
 
     public Frame() {
@@ -45,7 +52,6 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         gridWidth = 910;
         gridHeight = 610;
         calculateBoard(numTilesX, numTilesY);
-
 
         // initialize JFrame
         grid = new JFrame();
@@ -61,26 +67,23 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         grid.addMouseListener(this);
         grid.addMouseMotionListener(this);
         grid.getContentPane().validate();
-        //grid.getContentPane().repaint();
 
-        // initialize all nodes in board for AStar object
+        // controls
+        startButton.addActionListener(this);
+        startButton.setActionCommand("StartButton");
 
-
-        //astar = new AStar(board, startX, startY, endX, endY, numTilesX, numTilesY);
         spinnerX.addChangeListener(this);
         spinnerY.addChangeListener(this);
 
-
-
-        //startButton.setBounds(25, gridHeight - 75, 75, 50);
-        startButton.addActionListener(this);
-        startButton.setActionCommand("StartButton");
         grid.add(startButton);
-
-        //spinnerX.setBounds(gridWidth - 100, gridHeight - 75, 75, 20);
+        grid.add(widthLabel);
         grid.add(spinnerX);
+        grid.add(heightLabel);
         grid.add(spinnerY);
 
+        // try: change closed set to an arrayList
+        // use the timer iterations to change colors of each additional closed set
+        // use a cycled linked list of colors and change the head at each timer iteration
         timer = new Timer(15, new ActionListener()
         {
             public void actionPerformed(ActionEvent e) {
@@ -97,13 +100,11 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
             }
         });
         timer.setInitialDelay(1);
-        timer.start();
 
         revalidate();
 
     }
-    
-    
+
     public static void main(String[] args){
         new Frame();
     }
@@ -131,7 +132,8 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
     public void actionPerformed(ActionEvent e) {
         if(e.getActionCommand() == "StartButton" && startX != -1 && startY != -1 && endX != -1 && endY != -1){
-            astar = new AStar(board, this, startX, startY, endX, endY, numTilesX, numTilesY);
+
+            astar = new AStar(board, startX, startY, endX, endY, numTilesX, numTilesY);
             timer.start();
         }
     }
@@ -140,60 +142,72 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        if (startX != -1 && startY != -1) {
-            g.setColor(Color.decode("#FA6E4F"));
-        } else {
-            g.setColor(Color.white);
-        }
-        g.fillRect(getCoord(startX), getCoord(startY), tileSize, tileSize);
-
-        if (endX != -1 && endY != -1) {
-            g.setColor(Color.decode("#FB8E7E"));
-        } else {
-            g.setColor(Color.white);
-        }
-        g.fillRect(getCoord(endX), getCoord(endY), tileSize, tileSize);
-
         // draw grid
-        g.setColor(Color.gray);
+        g.setColor(Color.lightGray);
         for (int i = 0; i < numTilesX; i++) {
             for (int j = 0; j < numTilesY; j++) {
                 g.drawRect(i * tileSize, j * tileSize, tileSize, tileSize);
+
             }
         }
 
         // draw obstacles
         g.setColor(Color.black);
         for (int i = 0; i < obstacleCount; i++){
-
             g.fillRect(obstacles.get(i).x * tileSize, obstacles.get(i).y * tileSize, tileSize, tileSize);
-            System.out.println("tileX: " + obstacles.get(i).x +", tileY: " + obstacles.get(i).y);
         }
 
-        // color open & closed set
-        g.setColor(Color.decode("#C5D7C0"));
+
+        // paint start
+        if (startX != -1 && startY != -1) {
+            g.setColor(Color.decode("#355C7D"));
+        } else {
+            g.setColor(Color.white);
+        }
+        g.fillRect(getCoord(startX), getCoord(startY), tileSize, tileSize);
+
+        // paint end
+        if (endX != -1 && endY != -1) {
+            g.setColor(Color.decode("#6C5B7B"));
+        } else {
+            g.setColor(Color.white);
+        }
+        g.fillRect(getCoord(endX), getCoord(endY), tileSize, tileSize);
+
 
         if (astar != null) {
+
+            // paint openSet
+            g.setColor(Color.decode("#F67280"));
             for (int i = 0; i < astar.openSet.numItems; i++){
                 Node openNode = astar.openSet.items[i];
                 if ((openNode == astar.start) || (openNode == astar.end)){
                     continue;
                 }
                 g.fillRect(openNode.x * tileSize, openNode.y * tileSize, tileSize, tileSize);
-
             }
 
-            g.setColor(Color.decode("#8EC9BB"));
+            // paint closed set
+            g.setColor(Color.decode("#ffb4a2"));
             for (Node c : astar.closeSet){
-                if (c == astar.start || c == astar.end){
+                if (c == astar.start || c == astar.end || c.isPainted){
                     continue;
                 }
                 g.fillRect(c.x * tileSize, c.y * tileSize, tileSize, tileSize);
             }
 
+            // paint neighbors
+            g.setColor(Color.decode("#F8B195"));
+            for (Node n : astar.currNeighbors) {
+                if (n == astar.start || n == astar.end){
+                    continue;
+                }
+                g.fillRect(n.x * tileSize, n.y * tileSize, tileSize, tileSize);
+            }
 
+            // paint path
             if (astar.pathExists) {
-                g.setColor(Color.decode("#F2CF59"));
+                g.setColor(Color.decode("#F0A35E"));
                 for (int i = astar.path.size() - 1; i >= 0; i--) {
                     int pathX = astar.path.get(i).x;
                     int pathY = astar.path.get(i).y;
@@ -201,7 +215,6 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
                         continue;
                     }
                     g.fillRect(pathX * tileSize, pathY * tileSize, tileSize, tileSize);
-
                 }
             }
 
@@ -209,39 +222,13 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
     }
 
-    public boolean isValid(int x, int y) {
-
-        return (x >= 0 && (x <= numTilesX) && y >= 0 && (y <= numTilesY));
-    }
-
-
-    public int getCoord(int coord) {
-        return coord * tileSize;
-    }
-
-
-    public void mouseDragged (MouseEvent e){
-        //if start or end node is null then...
-        int mouseX = e.getX() / tileSize;
-        int mouseY = e.getY() / tileSize;
-        if (!isValid(mouseX, mouseY) || board[mouseX][mouseY].isObstacle) {
-            return;
-        }
-        this.board[mouseX][mouseY].isObstacle = true;
-        obstacles.add(this.board[mouseX][mouseY]);
-        obstacleCount++;
-        System.out.println("mouseX: " + mouseX +", mouseY: " + mouseY);
-        System.out.println("******** num obstacles: " + obstacles.size());
-
-        repaint();
-    }
-
-
+    // create start and end points with mouse click
     public void mouseClicked(MouseEvent e) {
         int mouseX = e.getX() / tileSize;
         int mouseY = (e.getY() - 20) / tileSize;
-        System.out.println("get x, get y: " + e.getX() + ", " + e.getY());
-        System.out.println("mouse y, mouse y: " + mouseX + ", " + mouseY);
+        if (!isValid(mouseX, mouseY)) {
+            return;
+        }
         if (SwingUtilities.isLeftMouseButton(e)){
             if(startX == -1 || startY == -1) {
                 startX = mouseX;
@@ -265,9 +252,44 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         repaint(getCoord(mouseX), getCoord(mouseY), tileSize, tileSize);
     }
 
+    // create obstacles with mouse drag
+    public void mouseDragged (MouseEvent e){
+
+        int mouseX = e.getX() / tileSize;
+        int mouseY = e.getY() / tileSize;
+        if (!isValid(mouseX, mouseY) || isEndpoint(mouseX, mouseY)) {
+            return;
+        }
+        if (SwingUtilities.isLeftMouseButton(e) && !board[mouseX][mouseY].isObstacle) {
+            this.board[mouseX][mouseY].isObstacle = true;
+            obstacles.add(this.board[mouseX][mouseY]);
+            obstacleCount++;
+        }
+        else if (SwingUtilities.isRightMouseButton(e) && board[mouseX][mouseY].isObstacle) {
+            this.board[mouseX][mouseY].isObstacle = false;
+            obstacles.remove(this.board[mouseX][mouseY]);
+            obstacleCount--;
+        }
+        repaint();
+    }
+
+    // check that node is within borders and not start/end point
+    public boolean isValid(int x, int y) {
+        return (x >= 0 && (x < numTilesX) && y >= 0 && (y < numTilesY));
+    }
+
+    public boolean isEndpoint(int x, int y) {
+        return ((x == startX && y == startY) || (x == endX && y == endY));
+    }
+
+    public int getCoord(int coord) {
+        return coord * tileSize;
+    }
+
     public void mouseMoved (MouseEvent e) { }
     public void mouseEntered(MouseEvent e) {}
     public void mouseExited(MouseEvent e) {}
     public void mousePressed(MouseEvent e) {}
     public void mouseReleased(MouseEvent e) {}
+    // ******* method to start pathfinder
 }
