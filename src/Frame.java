@@ -7,8 +7,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 public class Frame extends JPanel implements MouseInputListener, ActionListener, ChangeListener {
 
@@ -41,9 +39,11 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
     JButton startButton = new JButton("Start");
     JLabel widthLabel = new JLabel("Width");
     JLabel heightLabel = new JLabel("Height");
+    CircularLinkedList colors = new CircularLinkedList();
 
     AStar astar;
     Timer timer;
+    String myColor = "#f3a797";
 
     public Frame() {
 
@@ -81,9 +81,9 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         grid.add(heightLabel);
         grid.add(spinnerY);
 
-        // try: change closed set to an arrayList
-        // use the timer iterations to change colors of each additional closed set
-        // use a cycled linked list of colors and change the head at each timer iteration
+        hardCodeColors();
+
+
         timer = new Timer(15, new ActionListener()
         {
             public void actionPerformed(ActionEvent e) {
@@ -93,6 +93,7 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
                         startButton.setEnabled(false);
                     }
                     else {
+                        myColor = colors.getNext();
                         astar.findPath();
                     }
                     repaint();
@@ -100,9 +101,7 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
             }
         });
         timer.setInitialDelay(1);
-
         revalidate();
-
     }
 
     public static void main(String[] args){
@@ -125,7 +124,6 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
         numTilesX = (int) dimX.getNumber();
         numTilesY = (int) dimY.getNumber();
-        //revalidate();
         calculateBoard(numTilesX, numTilesY);
 
     }
@@ -178,7 +176,7 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         if (astar != null) {
 
             // paint openSet
-            g.setColor(Color.decode("#F67280"));
+            g.setColor(Color.decode(myColor));
             for (int i = 0; i < astar.openSet.numItems; i++){
                 Node openNode = astar.openSet.items[i];
                 if ((openNode == astar.start) || (openNode == astar.end)){
@@ -188,9 +186,9 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
             }
 
             // paint closed set
-            g.setColor(Color.decode("#ffb4a2"));
+            g.setColor(Color.decode("#F67280"));
             for (Node c : astar.closeSet){
-                if (c == astar.start || c == astar.end || c.isPainted){
+                if (c == astar.start || c == astar.end){
                     continue;
                 }
                 g.fillRect(c.x * tileSize, c.y * tileSize, tileSize, tileSize);
@@ -286,6 +284,21 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         return coord * tileSize;
     }
 
+    public void hardCodeColors() {
+        colors.add("#f3a797");
+        colors.add("#e2959b");
+        colors.add("#cb879f");
+        colors.add("#ae7ca1");
+        colors.add("#8c739e");
+        colors.add("#696a95");
+        colors.add("#466186");
+        colors.add("#696a95");
+        colors.add("#8c739e");
+        colors.add("#ae7ca1");
+        colors.add("#cb879f");
+        colors.add("#e2959b");
+    }
+
     public void mouseMoved (MouseEvent e) { }
     public void mouseEntered(MouseEvent e) {}
     public void mouseExited(MouseEvent e) {}
@@ -293,3 +306,4 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
     public void mouseReleased(MouseEvent e) {}
     // ******* method to start pathfinder
 }
+// add labels to dimensions
