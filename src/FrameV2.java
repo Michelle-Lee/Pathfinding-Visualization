@@ -40,6 +40,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     JLabel widthLabel = new JLabel("Width");
     JLabel heightLabel = new JLabel("Height");
     JComboBox themeBox;
+    Theme theme = new Theme("Plain");   // default
 
 
     Image img;
@@ -48,10 +49,10 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     Timer timer;
     Timer timer2;
 
-    CircularLinkedList colors = new CircularLinkedList();
-    CircularLinkedList colors2 = new CircularLinkedList();
-    String myColor = "#f3a797";
-    String myColor2 = "#f3a797";
+    //CircularLinkedList colors = new CircularLinkedList();
+    //CircularLinkedList colors2 = new CircularLinkedList();
+    String myColor;
+    String myColor2;
 
 
     public FrameV2() {
@@ -59,8 +60,8 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
         // DIMENSIONS
         numTilesX = (int) dimX.getNumber();
         numTilesY = (int) dimY.getNumber();
-        gridWidth = 910;
-        gridHeight = 610;
+        gridWidth = 890;
+        gridHeight = 560;
         calculateBoard();
 
         // INITIALIZE JFRAME
@@ -75,9 +76,8 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
         grid.setLocationRelativeTo(null);
         grid.getContentPane().validate();
         grid.setVisible(true);
-        
 
-        img = Toolkit.getDefaultToolkit().getImage("resources/DBZ_pixel.png");
+
 
         grid.addMouseListener(this);
         grid.addMouseMotionListener(this);
@@ -85,13 +85,12 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
 
         // CONTROLS
         startButton.addActionListener(this);
-        startButton.setActionCommand("StartButton");
 
         spinnerX.addChangeListener(this);
         spinnerY.addChangeListener(this);
 
         String[] themeList = {"Plain", "Synthwave Plain", "Synthwave",
-                "Sunset", "Dragon Ball Z - 1", "Dragon Ball Z - 2"};
+                "Sunset", "Dragon Ball Z Pixel", "Dragon Ball Z"};
         themeBox = new JComboBox(themeList);
         themeBox.setSelectedIndex(0);
         themeBox.addActionListener(this);
@@ -103,8 +102,11 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
         grid.add(spinnerY);
         grid.add(themeBox);
 
+        myColor = theme.gradient.head.value;
+        myColor2 = theme.flash.head.value;
+
         // ANIMATION & COLORS
-        hardCodeColors();
+        //hardCodeColors();
 
         // timer for color gradient
         timer2 = new Timer(800, new ActionListener() {
@@ -113,7 +115,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
                     ((Timer)e.getSource()).stop();
                     startButton.setEnabled(false);
                 }
-                myColor = colors.getNext();
+                myColor = theme.gradient.getNext();
             }
         });
 
@@ -127,7 +129,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
                         startButton.setEnabled(false);
                     }
                     else {
-                        myColor2 = colors2.getNext();
+                        myColor2 = theme.flash.getNext();
                         astar.findPath();
                     }
                     repaint();
@@ -157,19 +159,34 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
         repaint();
     }
 
-    // listener for spinner changes (dimensions)
+    // action listener for spinner changes (dimensions)
     public void stateChanged(ChangeEvent e) {
         numTilesX = (int) dimX.getNumber();
         numTilesY = (int) dimY.getNumber();
         calculateBoard();
     }
 
-    // start button action listener
+    // action listener for start button and theme dropdown
     public void actionPerformed(ActionEvent e) {
-        if(e.getActionCommand() == "StartButton" && startX != -1 && startY != -1 && endX != -1 && endY != -1){
+        if(e.getSource() == startButton && startX != -1 && startY != -1 && endX != -1 && endY != -1){
             astar = new AStar(board, startX, startY, endX, endY, numTilesX, numTilesY);
             timer.start();
             timer2.start();
+        }
+        if(e.getSource() == themeBox) {
+            JComboBox cb = (JComboBox)e.getSource();
+            String selectedTheme = (String)cb.getSelectedItem();
+            theme = new Theme(selectedTheme);
+
+            if (selectedTheme != "Plain" && selectedTheme != "Synthwave Plain") {
+                img = Toolkit.getDefaultToolkit().getImage(theme.background);
+            }
+            else {
+                grid.getContentPane().setBackground(Color.decode(theme.background));
+            }
+            myColor = theme.gradient.head.value;
+            myColor2 = theme.flash.head.value;
+            repaint();
         }
     }
 
@@ -180,10 +197,10 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
 
         g.drawImage(img, 0, 0, numTilesX*tileSize, numTilesY*tileSize,this);
 
-        g.setColor(Color.lightGray);
+        g.setColor(Color.decode(theme.drawColor));
         drawGrid(g);
 
-        g.setColor(Color.black);
+        g.setColor(Color.decode(theme.obstacleColor));
         paintObstacles(g);
 
         paintStart(g);
@@ -197,14 +214,12 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
 
             paintCloseSet(g);
 
-            g.setColor(Color.decode("#F8B195"));
+            g.setColor(Color.decode(myColor2));
             paintNeighbors(g);
 
-            g.setColor(Color.decode("#F0A35E"));
+            g.setColor(Color.decode(theme.pathColor));
             paintPath(g);
-
         }
-
     }
 
     // create start and end points with mouse click
@@ -290,7 +305,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
 
     public void paintStart(Graphics g) {
         if (startX != -1 && startY != -1) {
-            g.setColor(Color.decode("#355C7D"));
+            g.setColor(Color.decode(theme.startColor));
         } else {
             g.setColor(Color.white);
         }
@@ -299,7 +314,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
 
     public void paintEnd(Graphics g) {
         if (endX != -1 && endY != -1) {
-            g.setColor(Color.decode("#6C5B7B"));
+            g.setColor(Color.decode(theme.endColor));
         } else {
             g.setColor(Color.white);
         }
@@ -355,7 +370,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     // ************** Paint Component Helper Functions END *****************
 
 
-    // Sunset theme
+/*    // Sunset theme
     public void hardCodeColors() {
         colors.add("#f8b195");
         colors.add("#f3a797");
@@ -393,7 +408,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
         colors2.add("#7b6e9a");
         colors2.add("#58668e");
         colors2.add("#355c7d");
-    }
+    }*/
 
     public void mouseMoved (MouseEvent e) { }
     public void mouseEntered(MouseEvent e) {}
