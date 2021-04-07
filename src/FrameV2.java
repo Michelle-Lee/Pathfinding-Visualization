@@ -27,10 +27,10 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     int obstacleCount = 0;
 
     // CONTROLS
-    int initW = 80;
-    int initH = 50;
+    int initW = 120;
+    int initH = 75;
     int min = 10;
-    int max = 100;
+    int max = 200;
     int step = 5;
     SpinnerNumberModel dimX = new SpinnerNumberModel(initW, min, max, step);
     SpinnerNumberModel dimY = new SpinnerNumberModel(initH, min, max, step);
@@ -39,6 +39,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     JButton startButton = new JButton("Start");
     JLabel widthLabel = new JLabel("Width");
     JLabel heightLabel = new JLabel("Height");
+    JLabel themeLabel = new JLabel("Theme");
     JComboBox themeBox;
     Theme theme = new Theme("Plain");   // default
 
@@ -49,8 +50,6 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     Timer timer;
     Timer timer2;
 
-    //CircularLinkedList colors = new CircularLinkedList();
-    //CircularLinkedList colors2 = new CircularLinkedList();
     String myColor;
     String myColor2;
 
@@ -77,8 +76,6 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
         grid.getContentPane().validate();
         grid.setVisible(true);
 
-
-
         grid.addMouseListener(this);
         grid.addMouseMotionListener(this);
 
@@ -100,13 +97,13 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
         grid.add(spinnerX);
         grid.add(heightLabel);
         grid.add(spinnerY);
+        grid.add(themeLabel);
         grid.add(themeBox);
 
         myColor = theme.gradient.head.value;
         myColor2 = theme.flash.head.value;
 
-        // ANIMATION & COLORS
-        //hardCodeColors();
+        // ANIMATION
 
         // timer for color gradient
         timer2 = new Timer(800, new ActionListener() {
@@ -148,8 +145,8 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     // calculate tile size and board dimensions for AStar
     public void calculateBoard() {
         tileSize = Math.min((gridWidth - 10) / numTilesX, tileSize = (gridHeight - 10 ) / numTilesY);
-
         board = new Node[numTilesX][numTilesY];
+
         for(int i = 0; i < numTilesX; i++){
             for(int j = 0; j < numTilesY; j++) {
                 board[i][j] = new Node(i, j );
@@ -195,10 +192,15 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        g.drawImage(img, 0, 0, numTilesX*tileSize, numTilesY*tileSize,this);
+        // Set background depending on theme
+        if(theme.theme == "Plain" || theme.theme == "Synthwave Plain") {
+            g.setColor(Color.decode(theme.drawColor));
+            drawGrid(g);
+        }
+        else {
+            g.drawImage(img, 0, 0, numTilesX*tileSize, numTilesY*tileSize,this);
+        }
 
-        g.setColor(Color.decode(theme.drawColor));
-        drawGrid(g);
 
         g.setColor(Color.decode(theme.obstacleColor));
         paintObstacles(g);
@@ -256,7 +258,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     public void mouseDragged (MouseEvent e){
 
         int mouseX = e.getX() / tileSize;
-        int mouseY = e.getY() / tileSize;
+        int mouseY = (e.getY() - 20) / tileSize;
         if (!isValid(mouseX, mouseY) || isEndpoint(mouseX, mouseY)) {
             return;
         }
@@ -368,48 +370,7 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     }
 
     // ************** Paint Component Helper Functions END *****************
-
-
-/*    // Sunset theme
-    public void hardCodeColors() {
-        colors.add("#f8b195");
-        colors.add("#f3a797");
-        colors.add("#eb9d99");
-        colors.add("#e2959b");
-        colors.add("#d78d9e");
-        colors.add("#cb879f");
-        colors.add("#bd81a1");
-        colors.add("#ae7ca1");
-        colors.add("#9d77a0");
-        colors.add("#8c739e");
-        colors.add("#7b6e9a");
-        colors.add("#696a95");
-        colors.add("#58668e");
-        colors.add("#466186");
-        colors.add("#355c7d");
-        colors.add("#466186");
-        colors.add("#58668e");
-        colors.add("#696a95");
-        colors.add("#7b6e9a");
-        colors.add("#8c739e");
-        colors.add("#9d77a0");
-        colors.add("#ae7ca1");
-        colors.add("#bd81a1");
-        colors.add("#cb879f");
-        colors.add("#d78d9e");
-        colors.add("#e2959b");
-        colors.add("#eb9d99");
-
-        colors2.add("#f8b195");
-        colors2.add("#eb9d99");
-        colors2.add("#d78d9e");
-        colors2.add("#bd81a1");
-        colors2.add("#9d77a0");
-        colors2.add("#7b6e9a");
-        colors2.add("#58668e");
-        colors2.add("#355c7d");
-    }*/
-
+    
     public void mouseMoved (MouseEvent e) { }
     public void mouseEntered(MouseEvent e) {}
     public void mouseExited(MouseEvent e) {}
@@ -417,4 +378,3 @@ public class FrameV2 extends JPanel implements MouseInputListener, ActionListene
     public void mouseReleased(MouseEvent e) {}
     // ******* method to start pathfinder
 }
-// add labels to dimensions
