@@ -27,10 +27,10 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
 
     // CONTROLS
-    int initW = 80;
-    int initH = 50;
+    int initW = 40;
+    int initH = 20;
     int min = 10;
-    int max = 100;
+    int max = 200;
     int step = 5;
     SpinnerNumberModel dimX = new SpinnerNumberModel(initW, min, max, step);
     SpinnerNumberModel dimY = new SpinnerNumberModel(initH, min, max, step);
@@ -39,11 +39,12 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
     JButton startButton = new JButton("Start");
     JLabel widthLabel = new JLabel("Width");
     JLabel heightLabel = new JLabel("Height");
-    CircularLinkedList colors = new CircularLinkedList();
+    int[] nodeSize;
+    String[] nodeColor;
 
     AStar astar;
     Timer timer;
-    String myColor = "#f3a797";
+    int pathCounter = 1;
 
     public Frame() {
 
@@ -83,19 +84,20 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         grid.add(spinnerY);
 
         // ANIMATION & COLORS
-        hardCodeColors();
+        nodeSize = new int[]{tileSize*1/4, tileSize*3/8, tileSize*2/4, tileSize*5/8, tileSize*3/4};
+        nodeColor = new String[]{"#7f479b","#6765b7","#487fc9","#2ba0d1","#55bcce"};
+
 
         // timer for path exploring animation: timer action runs off every 15 ms
-        timer = new Timer(15, new ActionListener()
+        timer = new Timer(50, new ActionListener()
         {
             public void actionPerformed(ActionEvent e) {
                 if (astar != null) {
-                    if(astar.pathExists) {
+                    if(astar.pathExists && pathCounter == astar.path.size() - 1) {
                         ((Timer)e.getSource()).stop();
                         startButton.setEnabled(false);
                     }
-                    else {
-                        myColor = colors.getNext();
+                    else if (!astar.pathExists){
                         astar.findPath(); // pathfinder iterates every 15 ms
                     }
                     repaint();
@@ -155,16 +157,10 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
 
         if (astar != null) {
 
-            g.setColor(Color.decode(myColor));
             paintOpenSet(g);
-
-            g.setColor(Color.decode("#F67280"));
             paintCloseSet(g);
 
-            g.setColor(Color.decode("#F8B195"));
-            paintNeighbors(g);
-
-            g.setColor(Color.decode("#F0A35E"));
+            g.setColor(Color.decode("#883689"));
             paintPath(g);
 
         }
@@ -235,6 +231,10 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         return coord * tileSize;
     }
 
+    public int centerNode(int node_size) {
+        return tileSize/2 - node_size/2;
+    }
+
     // ************** Paint Component Helper Functions *****************
     public void drawGrid(Graphics g) {
         g.setColor(Color.lightGray);
@@ -245,11 +245,14 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
             }
         }
     }
+
     public void paintObstacles(Graphics g) {
         for (int i = 0; i < obstacleCount; i++){
-            g.fillRect(obstacles.get(i).x * tileSize, obstacles.get(i).y * tileSize, tileSize, tileSize);
+            g.fillRect(obstacles.get(i).x * tileSize + 1, obstacles.get(i).y * tileSize + 1,
+                    tileSize - 1, tileSize - 1);
         }
     }
+
     public void paintStart(Graphics g) {
         if (startX != -1 && startY != -1) {
             g.setColor(Color.decode("#355C7D"));
@@ -259,69 +262,83 @@ public class Frame extends JPanel implements MouseInputListener, ActionListener,
         g.fillRect(getCoord(startX), getCoord(startY), tileSize, tileSize);
 
     }
+
     public void paintEnd(Graphics g) {
         if (endX != -1 && endY != -1) {
             g.setColor(Color.decode("#6C5B7B"));
         } else {
             g.setColor(Color.white);
         }
-        g.fillRect(getCoord(endX), getCoord(endY), tileSize, tileSize);
+        g.fillRect(getCoord(endX) + 1, getCoord(endY) + 1, tileSize - 1, tileSize - 1);
 
     }
+
     public void paintOpenSet(Graphics g) {
         for (int i = 0; i < astar.openSet.numItems; i++){
-            Node openNode = astar.openSet.items[i];
-            if ((openNode == astar.start) || (openNode == astar.end)){
+            Node open = astar.openSet.items[i];
+            if ((open == astar.start) || (open == astar.end)){
                 continue;
             }
-            g.fillRect(openNode.x * tileSize, openNode.y * tileSize, tileSize, tileSize);
+            // if the detail index is < 3, the node is still expanding and changing color
+            if (open.nodeDetailIndex < 5) {
+                int thisNodeSize = nodeSize[open.nodeDetailIndex];
+                String thisNodeColor = nodeColor[open.nodeDetailIndex];
+                g.setColor(Color.decode(thisNodeColor));
+                g.fillRect(open.x * tileSize + centerNode(thisNodeSize) + 1,
+                        open.y * tileSize + centerNode(thisNodeSize) + 1,thisNodeSize - 1,thisNodeSize - 1);
+                open.nodeDetailIndex++;
+            }
+            else if (!astar.pathExists){
+                open.nodeDetailIndex = 0;
+                g.setColor(Color.decode("#bee3b6"));
+                g.fillRect(open.x * tileSize + 1, open.y * tileSize + 1, tileSize - 1, tileSize - 1);
+            }
+            else {
+                g.setColor(Color.decode("#8fd4cb"));
+                g.fillRect(open.x * tileSize + 1, open.y * tileSize + 1, tileSize - 1, tileSize - 1);
+            }
         }
     }
+
     public void paintCloseSet(Graphics g) {
         for (Node c : astar.closeSet){
             if (c == astar.start || c == astar.end){
                 continue;
             }
-            g.fillRect(c.x * tileSize, c.y * tileSize, tileSize, tileSize);
-        }
-    }
-    public void paintNeighbors(Graphics g) {
-        for (Node n : astar.currNeighbors) {
-            if (n == astar.start || n == astar.end){
-                continue;
+            // if the detail index is < 3, the node is still expanding and changing color
+            if (c.nodeDetailIndex < 5) {
+                int thisNodeSize = nodeSize[c.nodeDetailIndex];
+                String thisNodeColor = nodeColor[c.nodeDetailIndex];
+                g.setColor(Color.decode(thisNodeColor));
+                g.fillRect(c.x * tileSize + centerNode(thisNodeSize) + 1,
+                        c.y * tileSize + centerNode(thisNodeSize) + 1,thisNodeSize - 1,thisNodeSize - 1);
+                c.nodeDetailIndex++;
             }
-            g.fillRect(n.x * tileSize, n.y * tileSize, tileSize, tileSize);
+
+            else {
+                g.setColor(Color.decode("#8fd4cb"));
+                g.fillRect(c.x * tileSize + 1, c.y * tileSize + 1, tileSize - 1, tileSize - 1);
+            }
         }
     }
+
     public void paintPath(Graphics g) {
-        if (astar.pathExists) {
-            for (int i = astar.path.size() - 1; i >= 0; i--) {
+        if (astar.pathExists && pathCounter < astar.path.size()) {
+            // to animate path, start from end and add one node every timer iteration
+            for (int i = astar.path.size() - 1; i >= astar.path.size() - pathCounter; i--) {
                 int pathX = astar.path.get(i).x;
                 int pathY = astar.path.get(i).y;
                 if ((astar.path.get(i) == astar.start) || (astar.path.get(i) == astar.end)){
                     continue;
                 }
-                g.fillRect(pathX * tileSize, pathY * tileSize, tileSize, tileSize);
+                g.fillRect(pathX * tileSize + 1, pathY * tileSize + 1, tileSize - 1, tileSize - 1);
             }
+            pathCounter++;
         }
     }
 
     // ************** Paint Component Helper Functions END *****************
 
-    public void hardCodeColors() {
-        colors.add("#f3a797");
-        colors.add("#e2959b");
-        colors.add("#cb879f");
-        colors.add("#ae7ca1");
-        colors.add("#8c739e");
-        colors.add("#696a95");
-        colors.add("#466186");
-        colors.add("#696a95");
-        colors.add("#8c739e");
-        colors.add("#ae7ca1");
-        colors.add("#cb879f");
-        colors.add("#e2959b");
-    }
 
     public void mouseMoved (MouseEvent e) { }
     public void mouseEntered(MouseEvent e) {}
