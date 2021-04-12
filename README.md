@@ -14,8 +14,8 @@ Frame.java is a simpler GUI implementation, whereas in FrameV2, I took some crea
 * Press the **Start** button to begin the pathfinding.
 
 
-![main-demo][demo/AStar_Demo.gif]
+![main-demo](demo/AStar_Demo.gif)
 
-![sunrise-demo][demo/AStar_Demo_Sunrise.gif]
+![sunrise-demo](demo/AStar_Demo_Sunrise.gif)
 
-![dbz-demo][demo/AStar_Demo_DBZ.gif]
+![dbz-demo](demo/AStar_Demo_DBZ.gif)
