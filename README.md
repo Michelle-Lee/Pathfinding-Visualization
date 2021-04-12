@@ -12,6 +12,7 @@ Frame.java is a simpler GUI implementation, whereas in FrameV2, I took some crea
 * The second click on a tile sets an end point
 * Dragging the mouse creates walls/obstacles
 * Press the **Start** button to begin the pathfinding.
+* NOTE: the animation speed can be sped up, but was reduced for demonstration purposes
 
 ![main-demo](demo/AStar_Demo.gif)
 
