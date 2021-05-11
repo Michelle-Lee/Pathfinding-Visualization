@@ -20,8 +20,4 @@ Frame.java is a simpler GUI implementation, whereas in FrameV2, I took some crea
 ### FrameV2
 FrameV2.java contains fun themes I've added to my project. I experimented with using the animation timers to interact with the circular linked lists (containing color palettes) to create different visual effects with color patterns, gradients, and light flashes.
 <br><br>
-**Sunrise** <br><br>
-![sunrise-demo](demo/AStar_Demo_Sunrise.gif)
-<br><br>
-**Dragon Ball Z** <br><br>
-![dbz-demo](demo/AStar_Demo_DBZ.gif)
+![AStar-demo2](demo/AStar_Demo2.gif)
